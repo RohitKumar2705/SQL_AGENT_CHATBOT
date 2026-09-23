@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Agent Chatbot</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="chat-app">
+    <header class="chat-header">
+      <h1>SQL Agent Chatbot</h1>
+      <p>Ask questions about the database in plain English. Powered by Groq.</p>
+    </header>
+
+    <main id="messages" class="messages"></main>
+
+    <form id="chat-form" class="chat-form">
+      <input
+        id="chat-input"
+        type="text"
+        placeholder="e.g. Which genre has the longest tracks on average?"
+        autocomplete="off"
+        required
+      />
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+
+  <script src="/script.js"></script>
+</body>
+</html>
