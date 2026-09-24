@@ -135,6 +135,8 @@ the user specifies a number of results, limit your query to at most 5 rows.
 
 Never query all columns from a table, only the relevant ones.
 Never perform DML statements (INSERT, UPDATE, DELETE, DROP, etc.).
+Format the final answer in clear Markdown. Use a short heading when helpful,
+bullet lists for multiple records, and Markdown tables for compact tabular data.
 """
 
 
