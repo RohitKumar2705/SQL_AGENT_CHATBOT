@@ -16,7 +16,7 @@ from langgraph.prebuilt import ToolNode
 
 from .database import get_connection
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 _model = None
 
@@ -123,14 +123,9 @@ def list_tables(state: MessagesState):
 
 
 def call_get_schema(state: MessagesState):
-    llm_with_tools = get_model().bind_tools([sql_db_schema])
+    llm_with_tools = get_model().bind_tools([sql_db_schema], tool_choice="any")
     response = llm_with_tools.invoke(state["messages"])
     return {"messages": [response]}
-
-
-def route_after_schema(state: MessagesState) -> Literal["get_schema", "__end__"]:
-    last_message = state["messages"][-1]
-    return "get_schema" if last_message.tool_calls else END
 
 
 GENERATE_QUERY_PROMPT = """You are an agent designed to interact with a SQL database.
@@ -192,7 +187,7 @@ def build_agent():
 
     builder.add_edge(START, "list_tables")
     builder.add_edge("list_tables", "call_get_schema")
-    builder.add_conditional_edges("call_get_schema", route_after_schema)
+    builder.add_edge("call_get_schema", "get_schema")
     builder.add_edge("get_schema", "generate_query")
     builder.add_conditional_edges("generate_query", should_continue)
     builder.add_edge("check_query", "run_query")
