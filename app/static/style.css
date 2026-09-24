@@ -94,6 +94,36 @@ body {
   font-style: italic;
 }
 
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.msg table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.msg th,
+.msg td {
+  padding: 8px 10px;
+  border: 1px solid #3a4150;
+  text-align: left;
+}
+
+.msg th {
+  background: #2b3240;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.msg td {
+  background: #202632;
+}
+
 .chat-form {
   display: flex;
   gap: 8px;

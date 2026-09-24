@@ -26,9 +26,39 @@ function escapeHtml(text) {
   })[character]);
 }
 
+function convertTables(text) {
+  const lines = text.split("\n");
+  const output = [];
+  let index = 0;
+
+  const isSeparator = (line) =>
+    /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+  const cells = (line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+
+  while (index < lines.length) {
+    if (index + 1 < lines.length && lines[index].includes("|") && isSeparator(lines[index + 1])) {
+      const header = cells(lines[index]);
+      index += 2;
+      const rows = [];
+      while (index < lines.length && lines[index].includes("|") && lines[index].trim()) {
+        rows.push(cells(lines[index]));
+        index += 1;
+      }
+      output.push(
+        `<div class="table-wrap"><table><thead><tr>${header.map((cell) => `<th>${cell}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${header.map((_, column) => `<td>${row[column] || ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+      );
+      continue;
+    }
+    output.push(lines[index]);
+    index += 1;
+  }
+  return output.join("\n");
+}
+
 function renderMarkdown(markdown) {
   let html = escapeHtml(String(markdown)).replace(/\r\n/g, "\n");
   html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+  html = convertTables(html);
   html = html.replace(/^### (.+)$/gm, "<h4>$1</h4>");
   html = html.replace(/^## (.+)$/gm, "<h3>$1</h3>");
   html = html.replace(/^# (.+)$/gm, "<h2>$1</h2>");
@@ -37,7 +67,7 @@ function renderMarkdown(markdown) {
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
   return html.split("\n\n").map((paragraph) => (
-    paragraph.startsWith("<h") || paragraph.startsWith("<ul>") || paragraph.startsWith("<pre>")
+    paragraph.startsWith("<h") || paragraph.startsWith("<ul>") || paragraph.startsWith("<pre>") || paragraph.startsWith("<div class=\"table-wrap\">")
       ? paragraph
       : `<p>${paragraph.replace(/\n/g, "<br>")}</p>`
   )).join("");
