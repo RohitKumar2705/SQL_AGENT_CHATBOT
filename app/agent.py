@@ -105,7 +105,6 @@ def sql_db_query(query: str) -> str:
         con.close()
 
 
-get_schema_node = ToolNode([sql_db_schema], name="get_schema")
 run_query_node = ToolNode([sql_db_query], name="run_query")
 
 
@@ -123,9 +122,17 @@ def list_tables(state: MessagesState):
 
 
 def call_get_schema(state: MessagesState):
-    llm_with_tools = get_model().bind_tools([sql_db_schema], tool_choice="any")
-    response = llm_with_tools.invoke(state["messages"])
-    return {"messages": [response]}
+    table_call = {"name": "sql_db_list_tables", "args": {}, "id": "schema_tables_call", "type": "tool_call"}
+    table_names = sql_db_list_tables.invoke(table_call).content
+    schema_call = {
+        "name": "sql_db_schema",
+        "args": {"table_names": table_names},
+        "id": "schema_call",
+        "type": "tool_call",
+    }
+    schema_call_message = AIMessage(content="", tool_calls=[schema_call])
+    schema_message = sql_db_schema.invoke(schema_call)
+    return {"messages": [schema_call_message, schema_message]}
 
 
 GENERATE_QUERY_PROMPT = """You are an agent designed to interact with a SQL database.
@@ -182,15 +189,13 @@ def build_agent():
     builder = StateGraph(MessagesState)
     builder.add_node(list_tables)
     builder.add_node(call_get_schema)
-    builder.add_node(get_schema_node, "get_schema")
     builder.add_node(generate_query)
     builder.add_node(check_query)
     builder.add_node(run_query_node, "run_query")
 
     builder.add_edge(START, "list_tables")
     builder.add_edge("list_tables", "call_get_schema")
-    builder.add_edge("call_get_schema", "get_schema")
-    builder.add_edge("get_schema", "generate_query")
+    builder.add_edge("call_get_schema", "generate_query")
     builder.add_conditional_edges("generate_query", should_continue)
     builder.add_edge("check_query", "run_query")
     builder.add_edge("run_query", "generate_query")
